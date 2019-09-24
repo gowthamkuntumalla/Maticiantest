@@ -82,8 +82,8 @@ int main(int argc, char * argv[]) {
   }
   auto end_Dx = high_resolution_clock::now();
   auto duration_Dx = duration_cast < microseconds > (end_Dx - start_Dx);
-  cout << "elasped time for Dx computation is " << duration_Dx.count() << " microseconds" << endl;
-  cout << "sum of elasped times of both Dy and Dx computation is " << duration_Dy.count() + duration_Dx.count() << " microseconds" << endl;
+  cout << "elasped time for Dx computation = " << duration_Dx.count() << " microseconds" << endl;
+  cout << "sum of elasped times of both Dy and Dx computation = " << duration_Dy.count() + duration_Dx.count() << " microseconds" << endl;
 
   /* MIN_MAX Values */
   int min_Dy = 0, max_Dy = 0;
@@ -92,7 +92,7 @@ int main(int argc, char * argv[]) {
   //case1: 
   ext_elem(Dx, rows - 2, cols - 2, min_Dx, max_Dx);
   //case2: extrema_Dx = ext_elem(Dx,rows,cols-2,min_Dx,max_Dx);
-  cout << "min value of Dy = " << min_Dy << " and max value of Dy is " << max_Dy << endl;
-  cout << "min value of Dx = " << min_Dx << " and max value of Dx is " << max_Dx << endl;
+  cout << "min value of Dy = " << min_Dy << " and max value of Dy = " << max_Dy << endl;
+  cout << "min value of Dx = " << min_Dx << " and max value of Dx = " << max_Dx << endl;
   return 0;
 }
