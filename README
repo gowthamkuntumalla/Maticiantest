@@ -1,0 +1,3 @@
+Compiled using  $ g++ code.cpp -o test_exec
+Tested using $ ./test_exec (ROW) (COL)
+Please enter rows and cols greater than (3,3)

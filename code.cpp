@@ -6,150 +6,93 @@
 */
 
 #include <iostream>
-#include <string>
+#include <vector>
+#include <chrono>
 #include <ctime>
-#include <cstdlib>
+#include <string>
+#include <cstdlib> //rand
 #include <algorithm> //minmax
 #define MIN_V 1000
-#define MAX_V -1000	
+#define MAX_V -1000
+
 using namespace std;
+using namespace std::chrono;
 
-// int* ext_elem(unsigned char ** a, int r , int c) //extrema
-// {	
-// 	static int arr[2]; // (min,max)
-// 	arr[0] = MIN_V;
-// 	arr[1] = MAX_V;
-// 	for (int i; i<r; i++)
-// 	{
-// 		for(int j; j<c; j++)
-// 		{		
-// 			if (a[i][j]<arr[0])
-// 			{
-// 				arr[0] = a[i][j];
-// 			}
-// 			if (a[i][j]>arr[1])
-// 			{
-// 				arr[1] = a[i][j];
-// 			}		
-// 		}	
-// 	}
-		
-// 	return arr;
-// }
-
-int main (int argc, char *argv[])
+void ext_elem(const vector < vector < int > > & a, size_t r, size_t c, int & min, int & max) //extrema
 {
-  //assuming arguments are given correctly. i.e. greater than 4x4
-  //initializations
-  cout << "number of rows x columns is " << argv[1] << "x" << argv[2] << endl;
-  int rows = atoi (argv[1]);
-  int cols = atoi (argv[2]);
-  unsigned char mat[rows][cols]; // matrix to store rand int
-  srand (time (0));
-  for (int i = 0; i < rows; i++)
-    {
-      for (int j = 0; j < cols; j++)
-		{
-	 	 	mat[i][j] =  (char) (rand()% 255);  // random integers
-	  		cout << mat[i][j] << " ";
-		}
-
-	cout<< endl;
+  int sm, lg;
+  sm = MIN_V;
+  lg = MAX_V;
+  for (size_t i = 0; i < r; i++) {
+    for (size_t j = 0; j < c; j++) {
+      if (a[i][j] < sm) {
+        sm = a[i][j];
+      } else {
+        if (a[i][j] > lg) {
+          lg = a[i][j];
+        }
+      }
     }
+  }
+  min = sm;
+  max = lg;
+  return;
+}
 
+int main(int argc, char * argv[]) {
+  //init assuming arguments are given correctly. i.e. greater than 3x3
+  cout << "number of rows x columns is " << argv[1] << "x" << argv[2] << endl;
+  size_t rows = atoi(argv[1]);
+  size_t cols = atoi(argv[2]);
+  unsigned char mat[rows][cols]; 
+  srand(time(0));
+  for (size_t i = 0; i < rows; i++) {
+    for (size_t j = 0; j < cols; j++) {
+      mat[i][j] = rand() % 255;
+    }
+  }
 
-  // CONVOLUTION 
-  // const short int filter[3] = { -1, 0, 1 };
-  // Dy
-  time_t start_time, end_time;
-  unsigned char Dy[rows-2][cols];
-  time(&start_time);  
+  /* CONVOLUTION */
+
+  /* Dy */
+  vector < vector < int > > Dy(rows - 2, vector < int > (cols));
+  auto start_Dy = high_resolution_clock::now();
   // Border Assumption is that matrix keeps reducing in size due to filter just like a CNN reduction ins feature space. ex: in first step 5x5 becomes a 3x5 matrix
-  for (int i=0; i<rows-2;i++)
-  {
-  	for (int j=0; j < cols; j++)
-  	{	
-  		Dy[i][j] = (char) (-1*(int)mat[i][j] + (int)mat[i+2][j]); // because the instructions askedfor speedup wherever possible
-  	}
+  for (size_t i = 0; i < rows - 2; i++) {
+    for (size_t j = 0; j < cols; j++) {
+      Dy[i][j] = -1 * (size_t) mat[i][j] + (size_t) mat[i + 2][j]; // because the instructions askedfor speedup wherever possible
+    }
   }
-  time(&end_time);
-  double Dy_time = difftime(end_time,start_time);
-  cout<< "elasped time for Dy computation is" << Dy_time<<endl;
+  auto end_Dy = high_resolution_clock::now();
+  auto duration_Dy = duration_cast < microseconds > (end_Dy - start_Dy);
+  cout << "elasped time for Dy computation is " << duration_Dy.count() << " microseconds" << endl;
 
-
-
-  //Dx
-  unsigned char Dx[rows-2][cols-2];
-  time(&start_time);  
- 
-  // Border Assumption is that matrix keeps reducing in size due to filter just like a CNN reduction ins feature space. ex: in first step 3x5 becomes a 3x3 matrix
-  for (int i=0; i<rows-2;i++)
-  {
-  	for (int j=0; j < cols-2; j++)
-  	{	
-  		/* NOTE:: There is a slight confusion in the line 4 of the paragraph. hence two lines for Dx*/
-  		// case 1: when Dx = Dy * col filter = (mat* row filter) * col filter
-  		Dx[i][j] = (char) (-1*(int)Dy[i][j] + (int)Dy[i][j+2]);
-
-  		// case 2: when Dx = mat* col filter
-  		// Dx[i][j] = (char) (-1*(int)mat[i][j] + (int)mat[i][j+2]);
-  	}
+  /* Dx */
+  vector < vector < int > > Dx(rows - 2, vector < int > (cols - 2));
+  auto start_Dx = high_resolution_clock::now();
+  // Border Assumption is that matrix keeps reducing in size due to filter just like a CNN reduction ins feature space. ex: in this step 3x5 becomes a 3x3 matrix
+  for (int i = 0; i < rows - 2; i++) {
+    for (int j = 0; j < cols - 2; j++) {
+      /* NOTE:: There is a slight confusion in the line 4 of the PS. Should filter be individually applied on original matrix? hence two lines for Dx*/
+      /* case 1: when Dx = Dy * col filter = (mat* row filter) * col filter */
+      Dx[i][j] = -1 * (size_t) Dy[i][j] + (size_t) Dy[i][j + 2];
+      /* case 2: when Dx = mat* col filter
+      Dx[i][j] = -1*(size_t)mat[i][j] + (size_t)mat[i][j+2];*/
+    }
   }
-  time(&end_time);
-  double Dx_time = difftime(end_time,start_time);
-  cout<< "elasped time for Dx computation is" << Dx_time<<endl;
-  cout<< "sum of elasped times of both Dy and Dx computation is " << Dy_time + Dx_time<<" sec"<<endl;
+  auto end_Dx = high_resolution_clock::now();
+  auto duration_Dx = duration_cast < microseconds > (end_Dx - start_Dx);
+  cout << "elasped time for Dx computation is " << duration_Dx.count() << " microseconds" << endl;
+  cout << "sum of elasped times of both Dy and Dx computation is " << duration_Dy.count() + duration_Dx.count() << " microseconds" << endl;
 
-  // MIN_MAX Values
-  int* extrema_Dy;
-  int* extrema_Dx; 
-  // extrema_Dy = ext_elem(*Dy,rows-2,cols);
-  // //case1: 
-  // extrema_Dx = ext_elem(*Dx,rows-2,cols-2);
-  // /*case2: extrema_Dx = ext_elem(Dx,rows,cols-2);*/
-  // cout<< "min value of Dy = "<<*(extrema_Dy) <<" and max value of Dy is " << *(extrema_Dy+1)<<endl;
-  // cout<< "min value of Dx = "<<*(extrema_Dx) <<" and max value of Dx is " << *(extrema_Dx+1)<<endl;
-
-
-
-
-int arr[2]; // (min,max)
-arr[0] = MIN_V;
-arr[1] = MAX_V;
-  for (int i=0; i<rows-2; i++)
-  {
-    for(int j=0; j<cols; j++)
-    {   
-      if ((int)Dy[i][j]<arr[0])
-      {
-        arr[0] = Dy[i][j];
-      }
-      if ((int)Dy[i][j]>arr[1])
-      {
-        arr[1] = Dy[i][j];
-      }   
-    } 
-  }
-
- cout<< "min value of Dy = "<<arr[0] <<" and max value of Dy is " << arr[1]<<endl;
-
-arr[0] = MIN_V;
-arr[1] = MAX_V;
-  for (int i=0; i<rows-2; i++)
-  {
-    for(int j=0; j<cols-2; j++)
-    {   
-      if ((int)Dx[i][j]<arr[0])
-      {
-        arr[0] = Dx[i][j];
-      }
-      if ((int)Dx[i][j]>arr[1])
-      {
-        arr[1] = Dx[i][j];
-      }   
-    } 
-  }
-
-  cout<< "min value of Dx = "<<arr[0] <<" and max value of Dx is " << arr[1]<<endl;
+  /* MIN_MAX Values */
+  int min_Dy = 0, max_Dy = 0;
+  int min_Dx = 0, max_Dx = 0;
+  ext_elem(Dy, rows - 2, cols, min_Dy, max_Dy);
+  //case1: 
+  ext_elem(Dx, rows - 2, cols - 2, min_Dx, max_Dx);
+  //case2: extrema_Dx = ext_elem(Dx,rows,cols-2,min_Dx,max_Dx);
+  cout << "min value of Dy = " << min_Dy << " and max value of Dy is " << max_Dy << endl;
+  cout << "min value of Dx = " << min_Dx << " and max value of Dx is " << max_Dx << endl;
   return 0;
 }
