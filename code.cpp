@@ -9,9 +9,7 @@
 #include <vector>
 #include <chrono>
 #include <ctime>
-#include <string>
 #include <cstdlib> //rand
-#include <algorithm> //minmax
 #define MIN_V 1000
 #define MAX_V -1000
 
